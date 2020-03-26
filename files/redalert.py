@@ -19,32 +19,61 @@ app = Flask(__name__)
 @app.route("/create", methods=["POST"])
 def create():
   print(request.form)
+  callback_payload = json.loads(request.form["payload"])
+  command_user_id = callback_payload["user"]["id"]
+  severity = callback_payload["submission"]["severity"]
+  #print(severity)
+  channel_origin = callback_payload["channel"]["name"]
+  #print(channel_origin)
+  incident_name = callback_payload["submission"]["incident_name"]
+  #print(incident_name)
+  incident_manager_id = callback_payload["submission"]["incident_manager"]
+  #print(incident_manager)
+
+  #Translate user ID as user name
+  response = slack_client.users_profile_get(user = incident_manager_id)
+  incident_manager_name = response["profile"]["real_name"]
+
+  response = slack_client.chat_postMessage(
+    channel="#"+channel_origin,
+    text="Opening "+ severity +" in channel #"+ incident_name +", managed by "+ incident_manager_name +"!")
+  assert response["ok"]
+
   return make_response("", 200)
 
 @app.route("/incident", methods=["POST"])
 def incident():
-  command_type = json.dumps(request.form["text"]).strip('"')
-  command_origin = json.dumps(request.form["channel_name"]).strip('"')
-  command_user_id = json.dumps(request.form["user_id"]).strip('"')
-  command_trigger_id = json.dumps(request.form["trigger_id"]).strip('"')
-
-  print(command_type)
-  print(command_origin)
-  print(command_user_id)
-  print(command_trigger_id)
+  #print(request.form)
+  command_type = request.form["text"]
+  #print(command_type)
+  command_user_id = request.form["user_id"]
+  #print(command_user_id)
+  command_trigger_id = request.form["trigger_id"]
+  #print(command_trigger_id)
 
   if (command_type == "open"):
     print("Got open as 1st argument")
 
-    open_dialog = slack_client.api_call(
+    #print("Get users list")
+    #users = {}
+    #users_list_output = slack_client.users_list()
+    #for user in users_list_output["members"]:
+    #   users[user["id"]]=user["name"]
+
+    response = slack_client.api_call(
       "dialog.open", 
       json={
         'trigger_id' : command_trigger_id,
         'dialog' : {
           "title": "Create an incident",
           "submit_label": "Submit",
-          "callback_id": command_user_id + "incident_creation_form",
+          "callback_id": command_user_id + "_incident_creation_form",
           "elements": [
+            {
+              "type": "text",
+              "label": "Incident name",
+              "name": "incident_name"
+            },
             {
               "label": "Incident severity",
               "type": "select",
@@ -60,21 +89,23 @@ def incident():
                   "value": "yellowalert"
                 },
                 {
-                  "label": "Minor Alert",
-                  "value": "minoralert"
+                  "label": "Announcement",
+                  "value": "announcement"
                 }
               ]
+            },
+            {
+              "label": "Incident manager",
+              "name": "incident_manager",
+              "type": "select",
+              "data_source": "users"
             }
           ]
         }
       }
     )
-
-    print(open_dialog)
-    response = slack_client.chat_postMessage(
-      channel="#"+command_origin,
-      text="Opening incident!")
     assert response["ok"]
+
   elif (command_type == "close"):
     print("Got close as 1st argument")
     response = slack_client.chat_postMessage(
