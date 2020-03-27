@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 from flask import Flask, request, make_response, Response
+from datetime import datetime
 import os
 import json
 import psycopg2
@@ -21,22 +22,49 @@ def create():
   print(request.form)
   callback_payload = json.loads(request.form["payload"])
   command_user_id = callback_payload["user"]["id"]
+  slack_domain = callback_payload["team"]["domain"]
   severity = callback_payload["submission"]["severity"]
   #print(severity)
-  channel_origin = callback_payload["channel"]["name"]
+  origin_channel_name = callback_payload["channel"]["name"]
+  origin_channel_id = callback_payload["channel"]["id"]
   #print(channel_origin)
   incident_name = callback_payload["submission"]["incident_name"]
   #print(incident_name)
   incident_manager_id = callback_payload["submission"]["incident_manager"]
   #print(incident_manager)
 
-  #Translate user ID as user name
+  #Translate user ID as user name for user friendly message
   response = slack_client.users_profile_get(user = incident_manager_id)
   incident_manager_name = response["profile"]["real_name"]
 
+  #Generate a unique incident channel name
+  now = datetime.now()
+  date_time = now.strftime("%Y%m%d-%H%M")
+  incident_channel_name = severity+"-"+incident_name+"-"+date_time
+
+  #Create channel
+  response = slack_client.conversations_create(name = incident_channel_name)
+  incident_channel_id = response["channel"]["id"]
+  assert response["ok"]
+
+  #List invited users
+  if incident_manager_id != command_user_id:
+    user_ids = command_user_id,incident_manager_id
+  else: 
+    user_ids = command_user_id
+
+  #Invite people in it
+  response = slack_client.conversations_invite(channel = incident_channel_id, users = user_ids)
+  assert response["ok"]
+
+  #Join command origin channel if not yet in it
+  response = slack_client.conversations_join(channel=origin_channel_id)
+  assert response["ok"]
+
+  #Display a message with link to incident and incident master
   response = slack_client.chat_postMessage(
-    channel="#"+channel_origin,
-    text="Opening "+ severity +" in channel #"+ incident_name +", managed by "+ incident_manager_name +"!")
+    channel="#"+origin_channel_name,
+    text="Opening "+ severity +" in channel <https://"+ slack_domain +".slack.com/archives/"+ incident_channel_id +"|#"+ incident_channel_name +">, managed by <https://app.slack.com/team/"+ incident_manager_id+"|"+incident_manager_name +">!")
   assert response["ok"]
 
   return make_response("", 200)
