@@ -14,6 +14,7 @@ slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
 
 # Flask web server for incoming traffic from Slack
 app = Flask(__name__)
+app.config.from_object("config.ProductionConfig")
 
 # Backend route handling incident creation response
 @app.route("/create", methods=["POST"])
@@ -23,14 +24,10 @@ def create():
   command_user_id = callback_payload["user"]["id"]
   slack_domain = callback_payload["team"]["domain"]
   severity = callback_payload["submission"]["severity"]
-  #print(severity)
   origin_channel_name = callback_payload["channel"]["name"]
   origin_channel_id = callback_payload["channel"]["id"]
-  #print(channel_origin)
   incident_name = callback_payload["submission"]["incident_name"]
-  #print(incident_name)
   incident_manager_id = callback_payload["submission"]["incident_manager"]
-  #print(incident_manager)
 
   #Translate user ID as user name for user friendly message
   response = slack_client.users_profile_get(user = incident_manager_id)
@@ -105,20 +102,7 @@ def incident():
               "type": "select",
               "name": "severity",
               "placeholder": "Select incident severity",
-              "options": [
-                {
-                  "label": "Red Alert",
-                  "value": "redalert"
-                },
-                {
-                  "label": "Yellow Alert",
-                  "value": "yellowalert"
-                },
-                {
-                  "label": "Announcement",
-                  "value": "announcement"
-                }
-              ]
+              "options": app.config["SEVERITY_LEVELS"]
             },
             {
               "label": "Incident manager",
