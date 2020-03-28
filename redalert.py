@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import json
 import sys
+import re
 
 import slack
 
@@ -23,11 +24,16 @@ def create():
     callback_payload = json.loads(request.form["payload"])
     command_user_id = callback_payload["user"]["id"]
     slack_domain = callback_payload["team"]["domain"]
-    severity = callback_payload["submission"]["severity"]
     origin_channel_name = callback_payload["channel"]["name"]
     origin_channel_id = callback_payload["channel"]["id"]
     incident_name = callback_payload["submission"]["incident_name"]
     incident_manager_id = callback_payload["submission"]["incident_manager"]
+    severity = callback_payload["submission"]["severity"]
+
+    #Get severity nice name
+    for level in app.config["SEVERITY_LEVELS"]:
+        if level["value"] == severity:
+            severity_label =  level["label"]
 
     # Translate user ID as user name for user friendly message
     response = slack_client.users_profile_get(user=incident_manager_id)
@@ -61,10 +67,9 @@ def create():
     # Display a message with link to incident and incident master
     response = slack_client.chat_postMessage(
         channel="# "+origin_channel_name,
-        # TODO display user friendly severity label
-        text="Opening " + severity + " incident in channel <https://"
+        text="Opening " + severity_label + " incident in channel <https://"
         + slack_domain + ".slack.com/archives/" + incident_channel_id
-        + "|# " + incident_channel_name
+        + "|#" + incident_channel_name
         + ">, managed by <https://app.slack.com/team/" + incident_manager_id
         + "|" + incident_manager_name + ">!")
     assert response["ok"]
@@ -80,6 +85,7 @@ def incident():
     command_user_id = request.form["user_id"]
     command_user_name = request.form["user_name"]
     command_trigger_id = request.form["trigger_id"]
+    slack_domain = request.form["team_domain"]
     origin_channel_name = request.form["channel_name"]
     origin_channel_id = request.form["channel_id"]
 
@@ -123,6 +129,8 @@ def incident():
         assert response["ok"]
 
     elif (command_type == "list"):
+        incident_dict = {}
+
         # Check if we also want to list closed incidents
         exclude_archived = 'true'
         if len(command_args) > 1 and command_args[1] == 'all':
@@ -130,20 +138,38 @@ def incident():
 
         # Get the channel list
         response = slack_client.conversations_list(
-            exclude_archived=exclude_archived
+            exclude_archived=exclude_archived,
+            limit=100
         )
+        for channel in response['channels']:
+            if channel_match_pattern(channel):
+                incident_dict[channel['id']]=channel['name']
 
-        # print(response)
+        # Deal with pagination
+        while response['response_metadata']['next_cursor']!= '':
+            # Get the channel list
+            response = slack_client.conversations_list(
+              exclude_archived=exclude_archived,
+              cursor=response['response_metadata']['next_cursor'],
+              limit=100
+            )
+            for channel in response['channels']:
+                if channel_match_pattern(channel):
+                    incident_dict[channel['id']]=channel['name']
 
-        # Restrict to channel names matching redalert channels
+        incident_list_string = 'Listing incidents:\n'
+        # Generate a user friendly list
+        for current_channel_id,current_channel_name in incident_dict.items():
+            incident_list_string += "- <https://" + slack_domain \
+            + ".slack.com/archives/" + current_channel_id + "|#" \
+            + current_channel_name + ">\n"
 
         # Display a message listing incidents
         response = slack_client.chat_postMessage(
             channel="# "+origin_channel_name,
-            text="Listing incidents"
+            text=incident_list_string
         )
         assert response["ok"]
-        # TODO
 
     elif (command_type == "close"):
         # Display a message explicitly saying incident is closed and by whom
@@ -169,6 +195,12 @@ def incident():
 
     return make_response("", 200)
 
+
+def channel_match_pattern(channel):
+    for level in app.config["SEVERITY_LEVELS"]:
+        if re.match("^" + level["value"], channel['name']):
+            return True
+    return False
 
 def main():
     app.run(host='0.0.0.0', port=3000)
