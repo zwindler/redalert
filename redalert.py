@@ -60,7 +60,8 @@ def create():
   #Display a message with link to incident and incident master
   response = slack_client.chat_postMessage(
     channel="#"+origin_channel_name,
-    text="Opening "+ severity +" in channel <https://"+ slack_domain +".slack.com/archives/"+ incident_channel_id +"|#"+ incident_channel_name +">, managed by <https://app.slack.com/team/"+ incident_manager_id+"|"+incident_manager_name +">!")
+    #TODO display user friendly severity label
+    text="Opening "+ severity +" incident in channel <https://"+ slack_domain +".slack.com/archives/"+ incident_channel_id +"|#"+ incident_channel_name +">, managed by <https://app.slack.com/team/"+ incident_manager_id+"|"+incident_manager_name +">!")
   assert response["ok"]
 
   return make_response("", 200)
@@ -68,13 +69,17 @@ def create():
 #backend for /incident command management
 @app.route("/incident", methods=["POST"])
 def incident():
-  print(request.form)
+  #print(request.form)
   command_type = request.form["text"]
   command_user_id = request.form["user_id"]
   command_user_name = request.form["user_name"]
   command_trigger_id = request.form["trigger_id"]
   origin_channel_name = request.form["channel_name"] 
   origin_channel_id = request.form["channel_id"]
+
+  #Join command origin channel if not yet in it
+  response = slack_client.conversations_join(channel=origin_channel_id)
+  assert response["ok"]
 
   if (command_type == "open"):
     #Push a dialog, callback will be done on /dialog
@@ -112,33 +117,31 @@ def incident():
     assert response["ok"]
 
   elif (command_type == "list"):
-    #Join command origin channel if not yet in it
-    response = slack_client.conversations_join(channel=origin_channel_id)
-    assert response["ok"]
-
-    #Display a message with link to incident and incident master
+    #Display a message before listing incidents
     response = slack_client.chat_postMessage(
       channel="#"+origin_channel_name,
       text="Listing incidents"
     )
     assert response["ok"]
+    #TODO
 
   elif (command_type == "close"):
-    #Join command origin channel if not yet in it
-    response = slack_client.conversations_join(channel=origin_channel_id)
-    assert response["ok"]
-
-    #Display a message with link to incident and incident master
+    #Display a message explicitly saying incident is closed and by whom
     response = slack_client.chat_postMessage(
       channel="#"+origin_channel_name,
       text="<https://app.slack.com/team/"+command_user_id+"|"+command_user_name+"> closed this incident."
     )
     assert response["ok"]
 
+    response = slack_client.conversations_archive(
+      channel=origin_channel_id        
+    )
+    assert response["ok"]
+
   else:
     #Wrong command argument
     response = slack_client.chat_postMessage(
-      channel="#alerts",
+      channel="#"+origin_channel_name,
       text="Wrong command, only type '/incident open', '/incident list' or '/incident close')")
     assert response["ok"]
 
