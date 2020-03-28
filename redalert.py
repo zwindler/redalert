@@ -30,10 +30,10 @@ def create():
     incident_manager_id = callback_payload["submission"]["incident_manager"]
     severity = callback_payload["submission"]["severity"]
 
-    #Get severity nice name
+    # Get severity nice name
     for level in app.config["SEVERITY_LEVELS"]:
         if level["value"] == severity:
-            severity_label =  level["label"]
+            severity_label = level["label"]
 
     # Translate user ID as user name for user friendly message
     response = slack_client.users_profile_get(user=incident_manager_id)
@@ -135,6 +135,7 @@ def incident():
         exclude_archived = 'true'
         if len(command_args) > 1 and command_args[1] == 'all':
             exlude_archived = 'false'
+            # TODO not working yet?
 
         # Get the channel list
         response = slack_client.conversations_list(
@@ -143,10 +144,10 @@ def incident():
         )
         for channel in response['channels']:
             if channel_match_pattern(channel):
-                incident_dict[channel['id']]=channel['name']
+                incident_dict[channel['id']] = channel['name']
 
         # Deal with pagination
-        while response['response_metadata']['next_cursor']!= '':
+        while response['response_metadata']['next_cursor'] != '':
             # Get the channel list
             response = slack_client.conversations_list(
               exclude_archived=exclude_archived,
@@ -155,14 +156,14 @@ def incident():
             )
             for channel in response['channels']:
                 if channel_match_pattern(channel):
-                    incident_dict[channel['id']]=channel['name']
+                    incident_dict[channel['id']] = channel['name']
 
         incident_list_string = 'Listing incidents:\n'
         # Generate a user friendly list
-        for current_channel_id,current_channel_name in incident_dict.items():
+        for current_channel_id, current_channel_name in incident_dict.items():
             incident_list_string += "- <https://" + slack_domain \
-            + ".slack.com/archives/" + current_channel_id + "|#" \
-            + current_channel_name + ">\n"
+              + ".slack.com/archives/" + current_channel_id + "|#" \
+              + current_channel_name + ">\n"
 
         # Display a message listing incidents
         response = slack_client.chat_postMessage(
@@ -172,6 +173,8 @@ def incident():
         assert response["ok"]
 
     elif (command_type == "close"):
+        # TODO PREVENT close from archiving non redalert chans
+
         # Display a message explicitly saying incident is closed and by whom
         response = slack_client.chat_postMessage(
             channel="# " + origin_channel_name,
@@ -201,6 +204,7 @@ def channel_match_pattern(channel):
         if re.match("^" + level["value"], channel['name']):
             return True
     return False
+
 
 def main():
     app.run(host='0.0.0.0', port=3000)
