@@ -22,21 +22,22 @@ class Config(object):
         "value": "sev5"
       }
     ]
-    #Alternative Star Trek(tm) inspired alert levels
-    #SEVERITY_LEVELS = [
-    #  {
-    #    "label": "Red Alert",
-    #    "value": "redalert"
-    #  },
-    #  {
-    #    "label": "Yellow Alert",
-    #    "value": "yellowalert"
-    #  },
-    #  {
-    #    "label": "Announcement",
-    #    "value": "announcement"
-    #  }
-    #]
+    # Alternative Star Trek(tm) inspired alert levels
+    # SEVERITY_LEVELS = [
+    #   {
+    #     "label": "Red Alert",
+    #     "value": "redalert"
+    #   },
+    #   {
+    #     "label": "Yellow Alert",
+    #     "value": "yellowalert"
+    #   },
+    #   {
+    #     "label": "Announcement",
+    #     "value": "announcement"
+    #   }
+    # ]
+
 
 class ProductionConfig(Config):
     pass
