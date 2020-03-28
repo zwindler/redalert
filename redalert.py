@@ -4,7 +4,6 @@ from flask import Flask, request, make_response, Response
 from datetime import datetime
 import os
 import json
-import psycopg2
 import sys
 
 import slack
@@ -19,7 +18,7 @@ app = Flask(__name__)
 # Backend route handling incident creation response
 @app.route("/create", methods=["POST"])
 def create():
-  print(request.form)
+  #print(request.form)
   callback_payload = json.loads(request.form["payload"])
   command_user_id = callback_payload["user"]["id"]
   slack_domain = callback_payload["team"]["domain"]
@@ -71,13 +70,12 @@ def create():
 
 @app.route("/incident", methods=["POST"])
 def incident():
-  #print(request.form)
+  print(request.form)
   command_type = request.form["text"]
-  #print(command_type)
   command_user_id = request.form["user_id"]
-  #print(command_user_id)
   command_trigger_id = request.form["trigger_id"]
-  #print(command_trigger_id)
+  origin_channel_name = request.form["channel_name"] 
+  origin_channel_id = request.form["channel_id"]
 
   if (command_type == "open"):
     print("Got open as 1st argument")
@@ -134,16 +132,38 @@ def incident():
     )
     assert response["ok"]
 
+  elif (command_type == "list"):
+    print("Got list as 1st argument")
+
+    #Join command origin channel if not yet in it
+    response = slack_client.conversations_join(channel=origin_channel_id)
+    assert response["ok"]
+
+    #Display a message with link to incident and incident master
+    response = slack_client.chat_postMessage(
+      channel="#"+origin_channel_name,
+      text="Listing incidents"
+    )
+    assert response["ok"]
+
   elif (command_type == "close"):
     print("Got close as 1st argument")
-    response = slack_client.chat_postMessage(
-      channel="#alerts",
-      text="Closing incident!")
+
+    #Join command origin channel if not yet in it
+    response = slack_client.conversations_join(channel=origin_channel_id)
     assert response["ok"]
+
+    #Display a message with link to incident and incident master
+    response = slack_client.chat_postMessage(
+      channel="#"+origin_channel_name,
+      text="Closing incident"
+    )
+    assert response["ok"]
+
   else:
     response = slack_client.chat_postMessage(
       channel="#alerts",
-      text="Wrong command, only type '/incident open' or '/incident close')")
+      text="Wrong command, only type '/incident open', '/incident list' or '/incident close')")
     assert response["ok"]
 
   return make_response("", 200)    
