@@ -15,11 +15,16 @@ This project aims to provide an open source alternative.
 * list all incident channels, (TODO, not working) optionnaly also archived ones (closed incidents)
 * close the incident by archiving the Slack channel
 
-## possible future features
+## **possible** (as in maybe) future features
 
 * add external persistance to store incidents in an external database to allow better analysis
 * add **problem management** (linking incidents, adding tasks)
-* interact with other systems like PagerDuty (create an incident to alert "on call" operator, Trello (tasks), Confluence (postmortems)
+* interact with other systems like:
+* * PagerDuty (create an incident to alert "on call" operator), 
+* * Trello (tasks)
+* * Confluence (postmortems)
+* * ...
+* add multiple individuals at incident creation ([not possible yet?](https://stackoverflow.com/questions/48523512/slack-interactive-message-menu-select-multiple))
 
 ## prerequisites
 
