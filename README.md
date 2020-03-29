@@ -6,7 +6,7 @@ RedAlert is a basic Slack bot to helps in **incident management** by using Slack
 
 RedAlert is inspired by the work described by ManoMano SRE team in [this blog post](https://medium.com/manomano-tech/incident-management-with-a-bot-7e80deb5b5e5). Unfortunatly, ManoMano's bot (FireFighter) is closed source for now (I've asked its author who confirmed it).
 
-This project aims to provide an open source equivalent.
+This project aims to provide an open source alternative.
 
 ## features
 
