@@ -29,6 +29,7 @@ def create():
     incident_name = callback_payload["submission"]["incident_name"]
     incident_manager_id = callback_payload["submission"]["incident_manager"]
     severity = callback_payload["submission"]["severity"]
+    incident_desc = callback_payload["submission"]["incident_desc"]
 
     # Get severity nice name
     for level in app.config["SEVERITY_LEVELS"]:
@@ -54,6 +55,12 @@ def create():
         user_ids = command_user_id, incident_manager_id
     else:
         user_ids = command_user_id
+
+    # Add a purpose to the incident
+    response = slack_client.conversations_setPurpose(
+                   channel=incident_channel_id,
+                   purpose=incident_desc)
+    assert response["ok"]
 
     # Invite people in it
     response = slack_client.conversations_invite(channel=incident_channel_id,
@@ -121,6 +128,12 @@ def incident():
                             "name": "incident_manager",
                             "type": "select",
                             "data_source": "users"
+                        },
+                        {
+                            "label": "Brief description of the incident",
+                            "name": "incident_desc",
+                            "type": "textarea",
+                            "hint": "A brief description of the incident."
                         }
                     ]
                 }
@@ -182,7 +195,8 @@ def incident():
             )
             assert response["ok"]
         else:
-            # Display a message explicitly saying incident is closed and by whom
+            # Display a message explicitly saying incident is closed
+            # and by whom
             response = slack_client.chat_postMessage(
                 channel="#" + origin_channel_name,
                 text="<https://app.slack.com/team/" + command_user_id

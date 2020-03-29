@@ -10,9 +10,9 @@ This project aims to provide an open source alternative.
 
 ## features
 
-* open a channel, (TODO add a small description) and invite individuals (TODO or teams) in it
+* open a channel, add a small description and invite individuals (TODO, or teams) in it
 * configurable incident severity levels
-* list all incident channels, (TODO) optionnaly also archived ones (closed incidents)
+* list all incident channels, (TODO, not working) optionnaly also archived ones (closed incidents)
 * close the incident by archiving the Slack channel
 
 ## possible future features
