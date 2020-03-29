@@ -132,9 +132,9 @@ def incident():
         incident_dict = {}
 
         # Check if we also want to list closed incidents
-        exclude_archived = 'true'
+        exclude_archived = "true"
         if len(command_args) > 1 and command_args[1] == 'all':
-            exlude_archived = 'false'
+            exlude_archived = "false"
             # TODO not working yet?
 
         # Get the channel list
@@ -167,26 +167,33 @@ def incident():
 
         # Display a message listing incidents
         response = slack_client.chat_postMessage(
-            channel="# "+origin_channel_name,
+            channel="#" + origin_channel_name,
             text=incident_list_string
         )
         assert response["ok"]
 
     elif (command_type == "close"):
-        # TODO PREVENT close from archiving non redalert chans
+        current_channel = {}
+        current_channel['name'] = origin_channel_name
+        if not channel_match_pattern(current_channel):
+            response = slack_client.chat_postMessage(
+                channel="#" + origin_channel_name,
+                text="Unable to archive this channel, it's not an incident."
+            )
+            assert response["ok"]
+        else:
+            # Display a message explicitly saying incident is closed and by whom
+            response = slack_client.chat_postMessage(
+                channel="#" + origin_channel_name,
+                text="<https://app.slack.com/team/" + command_user_id
+                + "|" + command_user_name + "> closed this incident."
+            )
+            assert response["ok"]
 
-        # Display a message explicitly saying incident is closed and by whom
-        response = slack_client.chat_postMessage(
-            channel="# " + origin_channel_name,
-            text="<https://app.slack.com/team/" + command_user_id
-            + "|" + command_user_name + "> closed this incident."
-        )
-        assert response["ok"]
-
-        response = slack_client.conversations_archive(
-            channel=origin_channel_id
-        )
-        assert response["ok"]
+            response = slack_client.conversations_archive(
+                channel=origin_channel_id
+            )
+            assert response["ok"]
 
     else:
         # Wrong command argument
