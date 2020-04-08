@@ -18,6 +18,7 @@ This project aims to provide an open source alternative.
 ## **possible** (as in maybe) future features
 
 * add external persistance to store incidents in an external database to allow better analysis
+* custom config file that overrides the default values from config.py
 * add **problem management** (linking incidents, adding tasks)
 * interact with other systems like:
   * PagerDuty (create an incident to alert "on call" operator), 
@@ -55,4 +56,32 @@ Export SLACK\_BOT\_TOKEN variable (with the value found in the Slack Apps page) 
 ```bash
 export SLACK_BOT_TOKEN=xoxb-xxxx-xxxx-xxxx
 ./redalert.py
+```
+
+## Docker image
+
+As an alternative, you can also run or build yourself the Docker image of the redalert flask app
+
+### Build it
+
+Inside redalert repository, simply run `docker build`
+
+```bash
+docker build -t redalert .
+```
+
+### Run it
+
+```bash
+docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token zwindler/redalert
+```
+
+## Configure it
+
+RedAlert comes with some small level of customisation, including for now only the various incident severity levels (more features coming soon, see **fetures** chapter).
+
+In the near future, you will be able to add a custom configuration file to override the defaults, but for now, you have to override the whole config.py configuration file coming with the repo, either by modifying it or with a docker mount over the file (if you chose Docker to run it)
+
+```bash
+docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom-config.py:config.py zwindler/redalert
 ```
