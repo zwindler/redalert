@@ -62,15 +62,16 @@ export SLACK_BOT_TOKEN=xoxb-xxxx-xxxx-xxxx
 
 As an alternative, you can also run or build yourself the Docker image of the redalert flask app
 
-### Build it
+### Build it yourself and run it
 
 Inside redalert repository, simply run `docker build`
 
 ```bash
 docker build -t redalert .
+docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token redalert
 ```
 
-### Run it
+### Run it from official image
 
 ```bash
 docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token zwindler/redalert
