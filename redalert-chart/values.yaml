@@ -1,0 +1,33 @@
+replicaCount: 1
+image:
+  repository: zwindler/redalert
+  tag: latest
+  pullPolicy: Always
+
+service:
+  fixed:
+    enabled: false
+    name: redalert
+  type: ClusterIP
+  externalPort: 3000
+  internalPort: 3000
+ingress:
+  enabled: false
+
+redalert:
+  slackBotToken: "xoxb-your-own-slack-bot-token"
+  files:
+    config-custom.py: |
+      class ProductionConfig(Config):
+        pass
+
+resources: {}
+  # If you do want to specify resources for redalert, uncomment the following 
+  # lines, adjust them as necessary, and remove the curly braces after 
+  # 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi

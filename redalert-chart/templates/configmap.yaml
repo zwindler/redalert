@@ -1,0 +1,15 @@
+{{- if not (empty .Values.redalert.files) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "redalert.fullname" . }}
+  labels:
+    app: {{ template "redalert.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+data:
+{{- range $key, $value := .Values.redalert.files }}
+  {{ $key }}: |
+{{ $value | default "{}" | indent 4 }}
+{{- end -}}
+{{- end -}}

@@ -17,6 +17,11 @@ slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
 app = Flask(__name__)
 app.config.from_object("config.ProductionConfig")
 
+#  Default route handling liveness/readiness response
+@app.route("/", methods=["POST"])
+def root():
+    return make_response("", 200)
+
 #  Backend route handling dialog response
 @app.route("/dialog", methods=["POST"])
 def create():
