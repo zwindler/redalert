@@ -178,8 +178,7 @@ def list_incident(slack_client, command_args, slack_domain,
     # Check if we also want to list closed incidents
     exclude_archived = "true"
     if len(command_args) > 1 and command_args[1] == 'all':
-        exlude_archived = "false"
-        # TODO not working yet?
+        exclude_archived = "false"
 
     # Get the channel list
     response = slack_client.conversations_list(
