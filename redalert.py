@@ -102,15 +102,15 @@ def incident_command():
 
     if (command_type == "open"):
         open_incident(slack_client, command_trigger_id, command_user_id)
-
+        return make_response("", 200)
     elif (command_type == "list"):
         list_incident(slack_client, command_args, slack_domain, 
                         origin_channel_name)
-
+        return make_response("", 200)
     elif (command_type == "close"):
         close_incident(slack_client, origin_channel_name, origin_channel_id, 
                         command_user_name, command_user_id)
-
+        return make_response("", 200)
     else:
         # Wrong command argument
         response = slack_client.chat_postMessage(
@@ -118,7 +118,7 @@ def incident_command():
             text="Wrong command, only type '/incident open', \
             '/incident list' or '/incident close')")
         assert response["ok"]
-    return make_response("", 404)
+        return make_response("", 404)
 
 
 def channel_match_pattern(channel):
@@ -168,7 +168,6 @@ def open_incident(slack_client, command_trigger_id, command_user_id):
         }
     )
     assert response["ok"]
-    return make_response("", 200)
 
 
 def list_incident(slack_client, command_args, slack_domain, 
@@ -180,6 +179,7 @@ def list_incident(slack_client, command_args, slack_domain,
     if len(command_args) > 1 and command_args[1] == 'all':
         exclude_archived = "false"
 
+    # TODO cleanup this part of the code
     # Get the channel list
     response = slack_client.conversations_list(
         exclude_archived=exclude_archived,
@@ -187,7 +187,10 @@ def list_incident(slack_client, command_args, slack_domain,
     )
     for channel in response['channels']:
         if channel_match_pattern(channel):
-            incident_dict[channel['id']] = channel['name']
+            if channel['is_archived']:
+                incident_dict[channel['id']] = "~"+channel['name']+"~"
+            else:
+                incident_dict[channel['id']] = channel['name']
 
     # Deal with pagination
     while response['response_metadata']['next_cursor'] != '':
@@ -199,13 +202,19 @@ def list_incident(slack_client, command_args, slack_domain,
         )
         for channel in response['channels']:
             if channel_match_pattern(channel):
-                incident_dict[channel['id']] = channel['name']
+                if channel['is_archived']:
+                    incident_dict[channel['id']] = "~"+channel['name']+"~"
+                else:
+                    incident_dict[channel['id']] = channel['name']
 
-    incident_list_string = 'Listing incidents:\n'
+    if exclude_archived == "false":
+        incident_list_string = 'Listing ALL incidents (including closed):\n'
+    else:
+        incident_list_string = 'Listing incidents:\n'
     # Generate a user friendly list
     for current_channel_id, current_channel_name in incident_dict.items():
         incident_list_string += "- <https://" + slack_domain \
-            + ".slack.com/archives/" + current_channel_id + "|#" \
+            + ".slack.com/archives/" + current_channel_id + "|# " \
             + current_channel_name + ">\n"
 
     # Display a message listing incidents
@@ -214,7 +223,6 @@ def list_incident(slack_client, command_args, slack_domain,
         text=incident_list_string
     )
     assert response["ok"]
-    return make_response("", 200)
 
 def close_incident(slack_client, origin_channel_name, origin_channel_id, 
                     command_user_name, command_user_id):
@@ -240,7 +248,6 @@ def close_incident(slack_client, origin_channel_name, origin_channel_id,
             channel=origin_channel_id
         )
         assert response["ok"]
-    return make_response("", 200)
 
 def main():
     app.run(host='0.0.0.0', port=3000)
