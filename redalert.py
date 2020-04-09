@@ -85,7 +85,7 @@ def create():
 
 # backend for /incident command management
 @app.route("/incident", methods=["POST"])
-def incident():
+def incident_command():
     # print(request.form)
     command_args = request.form["text"].split()
     command_type = command_args[0]
@@ -101,113 +101,15 @@ def incident():
     assert response["ok"]
 
     if (command_type == "open"):
-        # Push a dialog, callback will be done on /dialog
-        response = slack_client.api_call(
-            "dialog.open",
-            json={
-                'trigger_id': command_trigger_id,
-                'dialog': {
-                    "title": "Create an incident",
-                    "submit_label": "Submit",
-                    "callback_id": command_user_id + "_incident_creation_form",
-                    "elements": [
-                        {
-                            "type": "text",
-                            "label": "Incident name",
-                            "name": "incident_name"
-                        },
-                        {
-                            "label": "Incident severity",
-                            "type": "select",
-                            "name": "severity",
-                            "placeholder": "Select incident severity",
-                            "options": app.config["SEVERITY_LEVELS"]
-                        },
-                        {
-                            "label": "Incident manager",
-                            "name": "incident_manager",
-                            "type": "select",
-                            "data_source": "users"
-                        },
-                        {
-                            "label": "Brief description of the incident",
-                            "name": "incident_desc",
-                            "type": "textarea",
-                            "hint": "A brief description of the incident."
-                        }
-                    ]
-                }
-            }
-        )
-        assert response["ok"]
+        open_incident(slack_client, command_trigger_id, command_user_id)
 
     elif (command_type == "list"):
-        incident_dict = {}
-
-        # Check if we also want to list closed incidents
-        exclude_archived = "true"
-        if len(command_args) > 1 and command_args[1] == 'all':
-            exlude_archived = "false"
-            # TODO not working yet?
-
-        # Get the channel list
-        response = slack_client.conversations_list(
-            exclude_archived=exclude_archived,
-            limit=100
-        )
-        for channel in response['channels']:
-            if channel_match_pattern(channel):
-                incident_dict[channel['id']] = channel['name']
-
-        # Deal with pagination
-        while response['response_metadata']['next_cursor'] != '':
-            # Get the channel list
-            response = slack_client.conversations_list(
-              exclude_archived=exclude_archived,
-              cursor=response['response_metadata']['next_cursor'],
-              limit=100
-            )
-            for channel in response['channels']:
-                if channel_match_pattern(channel):
-                    incident_dict[channel['id']] = channel['name']
-
-        incident_list_string = 'Listing incidents:\n'
-        # Generate a user friendly list
-        for current_channel_id, current_channel_name in incident_dict.items():
-            incident_list_string += "- <https://" + slack_domain \
-              + ".slack.com/archives/" + current_channel_id + "|#" \
-              + current_channel_name + ">\n"
-
-        # Display a message listing incidents
-        response = slack_client.chat_postMessage(
-            channel="#" + origin_channel_name,
-            text=incident_list_string
-        )
-        assert response["ok"]
+        list_incident(slack_client, command_args, slack_domain, 
+                        origin_channel_name)
 
     elif (command_type == "close"):
-        current_channel = {}
-        current_channel['name'] = origin_channel_name
-        if not channel_match_pattern(current_channel):
-            response = slack_client.chat_postMessage(
-                channel="#" + origin_channel_name,
-                text="Unable to archive this channel, it's not an incident."
-            )
-            assert response["ok"]
-        else:
-            # Display a message explicitly saying incident is closed
-            # and by whom
-            response = slack_client.chat_postMessage(
-                channel="#" + origin_channel_name,
-                text="<https://app.slack.com/team/" + command_user_id
-                + "|" + command_user_name + "> closed this incident."
-            )
-            assert response["ok"]
-
-            response = slack_client.conversations_archive(
-                channel=origin_channel_id
-            )
-            assert response["ok"]
+        close_incident(slack_client, origin_channel_name, origin_channel_id, 
+                        command_user_name, command_user_id)
 
     else:
         # Wrong command argument
@@ -216,8 +118,7 @@ def incident():
             text="Wrong command, only type '/incident open', \
             '/incident list' or '/incident close')")
         assert response["ok"]
-
-    return make_response("", 200)
+    return make_response("", 404)
 
 
 def channel_match_pattern(channel):
@@ -226,6 +127,121 @@ def channel_match_pattern(channel):
             return True
     return False
 
+
+def open_incident(slack_client, command_trigger_id, command_user_id):
+    # Push a dialog, callback will be done on /dialog
+    response = slack_client.api_call(
+        "dialog.open",
+        json={
+            'trigger_id': command_trigger_id,
+            'dialog': {
+                "title": "Create an incident",
+                "submit_label": "Submit",
+                "callback_id": command_user_id + "_incident_creation_form",
+                "elements": [
+                    {
+                        "type": "text",
+                        "label": "Incident name",
+                        "name": "incident_name"
+                    },
+                    {
+                        "label": "Incident severity",
+                        "type": "select",
+                        "name": "severity",
+                        "placeholder": "Select incident severity",
+                        "options": app.config["SEVERITY_LEVELS"]
+                    },
+                    {
+                        "label": "Incident manager",
+                        "name": "incident_manager",
+                        "type": "select",
+                        "data_source": "users"
+                    },
+                    {
+                        "label": "Brief description of the incident",
+                        "name": "incident_desc",
+                        "type": "textarea",
+                        "hint": "A brief description of the incident."
+                    }
+                ]
+            }
+        }
+    )
+    assert response["ok"]
+    return make_response("", 200)
+
+
+def list_incident(slack_client, command_args, slack_domain, 
+                origin_channel_name):
+    incident_dict = {}
+
+    # Check if we also want to list closed incidents
+    exclude_archived = "true"
+    if len(command_args) > 1 and command_args[1] == 'all':
+        exlude_archived = "false"
+        # TODO not working yet?
+
+    # Get the channel list
+    response = slack_client.conversations_list(
+        exclude_archived=exclude_archived,
+        limit=100
+    )
+    for channel in response['channels']:
+        if channel_match_pattern(channel):
+            incident_dict[channel['id']] = channel['name']
+
+    # Deal with pagination
+    while response['response_metadata']['next_cursor'] != '':
+        # Get the channel list
+        response = slack_client.conversations_list(
+            exclude_archived=exclude_archived,
+            cursor=response['response_metadata']['next_cursor'],
+            limit=100
+        )
+        for channel in response['channels']:
+            if channel_match_pattern(channel):
+                incident_dict[channel['id']] = channel['name']
+
+    incident_list_string = 'Listing incidents:\n'
+    # Generate a user friendly list
+    for current_channel_id, current_channel_name in incident_dict.items():
+        incident_list_string += "- <https://" + slack_domain \
+            + ".slack.com/archives/" + current_channel_id + "|#" \
+            + current_channel_name + ">\n"
+
+    # Display a message listing incidents
+    response = slack_client.chat_postMessage(
+        channel="#" + origin_channel_name,
+        text=incident_list_string
+    )
+    assert response["ok"]
+    return make_response("", 200)
+
+def close_incident(slack_client, origin_channel_name, origin_channel_id, 
+                    command_user_name, command_user_id):
+    current_channel = {}
+    current_channel['name'] = origin_channel_name
+    if not channel_match_pattern(current_channel):
+        response = slack_client.chat_postMessage(
+            channel="#" + origin_channel_name,
+            text="Unable to archive this channel, it's not an incident."
+        )
+        assert response["ok"]
+    else:
+        # Display a message explicitly saying incident is closed
+        # and by whom
+        response = slack_client.chat_postMessage(
+            channel="#" + origin_channel_name,
+            text="<https://app.slack.com/team/" + command_user_id
+            + "|" + command_user_name + "> closed this incident."
+        )
+        assert response["ok"]
+
+        response = slack_client.conversations_archive(
+            channel=origin_channel_id
+        )
+        assert response["ok"]
+    return make_response("", 200)
 
 def main():
     app.run(host='0.0.0.0', port=3000)
