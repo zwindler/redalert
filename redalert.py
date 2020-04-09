@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.config.from_object("config.ProductionConfig")
 
 #  Default route handling liveness/readiness response
-@app.route("/", methods=["POST"])
+@app.route("/", methods=["GET"])
 def root():
     return make_response("", 200)
 
