@@ -1,38 +1,40 @@
 # redalert
 
-## goal of the project
+## Goal of the project
 
-RedAlert is a basic Slack bot to helps in **incident management** by using Slack channels.
+RedAlert is a basic Slack bot to helps in **incident management** by using Slack channels. It's nowhere as complete as [Netflix' "Dispatch"](https://github.com/Netflix/dispatch) incident manager, nor does it aims to be.
 
 RedAlert is inspired by the work described by ManoMano SRE team in [this blog post](https://medium.com/manomano-tech/incident-management-with-a-bot-7e80deb5b5e5). Unfortunatly, ManoMano's bot (FireFighter) is closed source for now (I've asked its author who confirmed it).
 
 This project aims to provide an open source alternative.
 
-## features
+## Features
 
-* open a channel, add a small description and invite individuals (TODO, or teams) in it
+* open a channel, add a small description and invite individuals in it
 * configurable incident severity levels
-* list all incident channels, (TODO, not working) optionnaly also archived ones (closed incidents)
+* list all incident channels, optionnaly also archived ones (aka closed incidents)
 * close the incident by archiving the Slack channel
 
-## **possible** (as in maybe) future features
+## Future features
 
+* better documentation (working on it)
 * add external persistance to store incidents in an external database to allow better analysis
 * custom config file that overrides the default values from config.py
+* automatically add certain individuals or teams (configurable)
 * add **problem management** (linking incidents, adding tasks)
 * interact with other systems like:
-  * PagerDuty (create an incident to alert "on call" operator), 
+  * PagerDuty (create an incident to alert "on call" operator)
   * Trello (tasks)
   * Confluence (postmortems)
   * ...
 * add multiple individuals at incident creation ([not possible yet?](https://stackoverflow.com/questions/48523512/slack-interactive-message-menu-select-multiple))
 
-## prerequisites
+## Prerequisites
 
 * a Slack workspace with enough rights to add app and custom commands (???)
 * a server capable of running Flask python webserver with Python 3.6+
 
-## installation
+## Manual installation
 
 Add the App in you Slack administration
 
@@ -77,12 +79,36 @@ docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token redalert
 docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token zwindler/redalert
 ```
 
-## Configure it
+## Configure it
 
 RedAlert comes with some small level of customisation, including for now only the various incident severity levels (more features coming soon, see **fetures** chapter).
 
-In the near future, you will be able to add a custom configuration file to override the defaults, but for now, you have to override the whole config.py configuration file coming with the repo, either by modifying it or with a docker mount over the file (if you chose Docker to run it)
+In the near future, you will be able to add a custom configuration file to override the defaults, but for now, you have to override the whole `config.py` configuration file coming with the repo, either by modifying it or with a docker mount over the file (if you chose Docker to run it)
 
 ```bash
 docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom-config.py:config.py zwindler/redalert
+```
+
+### `config.py` structure
+
+The `config.py` file is a standard Flask config file. It allows multiple configurations, including a default one for all your environments and a system of overrides [discribed here](https://flask.palletsprojects.com/en/1.1.x/config/).
+
+For now, the only configurable part is the severity levels, through the **SEVERITY_LEVELS** variable. You can modify it like this for example:
+
+```python
+    # Alternative Star Trek(tm) inspired alert levels
+    SEVERITY_LEVELS = [
+        {
+            "label": "Red Alert",
+            "value": "redalert"
+        },
+        {
+            "label": "Yellow Alert",
+            "value": "yellowalert"
+        },
+        {
+            "label": "Captain Announcement",
+            "value": "announcement"
+        }
+    ]
 ```
