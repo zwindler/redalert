@@ -14,12 +14,13 @@ This project aims to provide an open source alternative.
 * configurable incident severity levels
 * list all incident channels, optionnaly also archived ones (aka closed incidents)
 * close the incident by archiving the Slack channel
+* custom config file that overrides the default values from config.py
 
 ## Future features
 
 * better documentation (working on it)
+* add tests to check if configuration is valid
 * add external persistance to store incidents in an external database to allow better analysis
-* custom config file that overrides the default values from config.py
 * automatically add certain individuals or teams (configurable)
 * add **problem management** (linking incidents, adding tasks)
 * interact with other systems like:
@@ -92,9 +93,13 @@ To customize it, you can either :
 docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom_config.py:/home/redalert/custom_config.py zwindler/redalert
 ```
 
-The `config.py` file is a standard Flask configuration file. It allows multiple configurations, including a default one for all your environments and a system of overrides [discribed here](https://flask.palletsprojects.com/en/1.1.x/config/).
+The `config.py` file is a standard Flask configuration file. It allows multiple configurations, including a default one for all your environments and a system of overrides [described here](https://flask.palletsprojects.com/en/1.1.x/config/).
 
-For now, the only configurable part is the severity levels, through the **SEVERITY_LEVELS** variable. You can modify the `custom_config.py` file like this for example:
+For now, the only configurable part are :
+
+### Severity levels
+
+The severity levels can be configured through the **SEVERITY_LEVELS** variable. You can modify the `custom_config.py` file like this for example:
 
 ```python
 class CustomConfig(object):
@@ -113,4 +118,28 @@ class CustomConfig(object):
             "value": "announcement"
         }
     ]
+```
+
+Note: you cannot use "always" as a value for the severity levels
+
+### Always include some individuals in the incident
+
+Depending on the severity of the incident, you can decide to always add some individual (through their slack user ID).
+
+The "always" code means that no matter the severity, this contact will always be included in the incident, in addition to the IDs added afterward in the various severities.
+
+The following labels (sev1, sev2, ...) have to correspond to actual severity levels, as configured in the `SEVERITY_LEVELS` variable.
+
+The values are user comma separated user lists like in this example:
+
+```python
+class CustomConfig(object):
+    INCLUDE_IN_INCIDENT = {
+        "always" : "U010PPYMH33",
+        "sev1" : "U0105K7EFNX,U0xxxxxxxx",
+        "sev2" : "U0105K7EFNX",
+        "sev3" : [],
+        "sev4" : [],
+        "sev5" : []
+    }
 ```

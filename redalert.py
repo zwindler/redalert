@@ -35,15 +35,10 @@ def create():
     incident_manager_id = callback_payload["submission"]["incident_manager"]
     severity = callback_payload["submission"]["severity"]
     incident_desc = callback_payload["submission"]["incident_desc"]
+    include_in_incident = app.config["INCLUDE_IN_INCIDENT"]
 
     # Get severity nice name
-    for level in app.config["SEVERITY_LEVELS"]:
-        if level["value"] == severity:
-            severity_label = level["label"]
-
-    # Translate user ID as user name for user friendly message
-    response = slack_client.users_profile_get(user=incident_manager_id)
-    incident_manager_name = response["profile"]["real_name"]
+    severity_label = get_severity_pretty_name(severity)
 
     # Generate a unique incident channel name
     now = datetime.now()
@@ -55,11 +50,18 @@ def create():
     incident_channel_id = response["channel"]["id"]
     assert response["ok"]
 
+    # Translate user ID as user name for user friendly message
+    response = slack_client.users_profile_get(user=incident_manager_id)
+    incident_manager_name = response["profile"]["real_name"]
+
     # List invited users
+    user_ids = command_user_id
     if incident_manager_id != command_user_id:
-        user_ids = command_user_id, incident_manager_id
-    else:
-        user_ids = command_user_id
+        user_ids += ","+incident_manager_id
+    if include_in_incident["always"] != []:
+        user_ids += ","+include_in_incident["always"]
+    if include_in_incident[severity]:
+        user_ids += ","+include_in_incident[severity]
 
     # Add a purpose to the incident
     response = slack_client.conversations_setPurpose(
@@ -68,6 +70,7 @@ def create():
     assert response["ok"]
 
     # Invite people in it
+    # TODO: check if there are less than 1000 invites (max)
     response = slack_client.conversations_invite(channel=incident_channel_id,
                                                  users=user_ids)
     assert response["ok"]
@@ -124,6 +127,14 @@ def incident_command():
             '/incident list' or '/incident close')")
         assert response["ok"]
         return make_response("", 404)
+
+
+def get_severity_pretty_name(severity):
+    for level in app.config["SEVERITY_LEVELS"]:
+        if level["value"] == severity:
+            severity_label = level["label"]
+            return severity_label
+    return "incident"
 
 
 def channel_match_pattern(channel):
