@@ -81,21 +81,23 @@ docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token zwindler/redaler
 
 ## Configure it
 
-RedAlert comes with some small level of customisation, including for now only the various incident severity levels (more features coming soon, see **fetures** chapter).
+redalert comes with some small level of customisation, including for now only the various incident severity levels (more features coming soon, see **features** chapter).
 
-In the near future, you will be able to add a custom configuration file to override the defaults, but for now, you have to override the whole `config.py` configuration file coming with the repo, either by modifying it or with a docker mount over the file (if you chose Docker to run it)
+To customize it, you can either :
+
+* override the whole `config.py` configuration file coming with the repo, by modifying it or with a docker mount over the file (if you chose Docker to run it).
+* use the `custom_config.py` file to override only the default values you want.
 
 ```bash
-docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom-config.py:config.py zwindler/redalert
+docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom_config.py:/home/redalert/custom_config.py zwindler/redalert
 ```
 
-### `config.py` structure
+The `config.py` file is a standard Flask configuration file. It allows multiple configurations, including a default one for all your environments and a system of overrides [discribed here](https://flask.palletsprojects.com/en/1.1.x/config/).
 
-The `config.py` file is a standard Flask config file. It allows multiple configurations, including a default one for all your environments and a system of overrides [discribed here](https://flask.palletsprojects.com/en/1.1.x/config/).
-
-For now, the only configurable part is the severity levels, through the **SEVERITY_LEVELS** variable. You can modify it like this for example:
+For now, the only configurable part is the severity levels, through the **SEVERITY_LEVELS** variable. You can modify the `custom_config.py` file like this for example:
 
 ```python
+class CustomConfig(object):
     # Alternative Star Trek(tm) inspired alert levels
     SEVERITY_LEVELS = [
         {

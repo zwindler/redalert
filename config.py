@@ -22,7 +22,3 @@ class Config(object):
             "value": "sev5"
         }
     ]
-
-
-class ProductionConfig(Config):
-    pass

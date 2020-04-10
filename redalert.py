@@ -15,7 +15,7 @@ slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
 
 #  Flask web server for incoming traffic from Slack
 app = Flask(__name__)
-app.config.from_object("config.ProductionConfig")
+app.config.from_pyfile('custom_config.py')
 
 #  Default route handling liveness/readiness response
 @app.route("/", methods=["GET"])
