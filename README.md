@@ -12,16 +12,15 @@ This project aims to provide an open source alternative.
 
 * open a channel, add a small description and invite individuals in it
 * configurable incident severity levels
+* automatically add individuals or teams (configurable)
 * list all incident channels, optionnaly also archived ones (aka closed incidents)
 * close the incident by archiving the Slack channel
-* custom config file that overrides the default values from config.py
 
 ## Future features
 
-* better documentation (working on it)
+* better documentation
 * add tests to check if configuration is valid
 * add external persistance to store incidents in an external database to allow better analysis
-* automatically add certain individuals or teams (configurable)
 * add **problem management** (linking incidents, adding tasks)
 * interact with other systems like:
   * PagerDuty (create an incident to alert "on call" operator)
@@ -29,6 +28,7 @@ This project aims to provide an open source alternative.
   * Confluence (postmortems)
   * ...
 * add multiple individuals at incident creation ([not possible yet?](https://stackoverflow.com/questions/48523512/slack-interactive-message-menu-select-multiple))
+* custom config file that overrides the default values from config.py
 
 ## Prerequisites
 
