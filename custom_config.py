@@ -1,2 +1,0 @@
-class CustomConfig(object):
-    pass

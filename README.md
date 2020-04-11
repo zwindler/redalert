@@ -86,8 +86,8 @@ redalert comes with some small level of customisation, including for now only th
 
 To customize it, you can either :
 
-* override the whole `config.py` configuration file coming with the repo, by modifying it or with a docker mount over the file (if you chose Docker to run it).
-* use the `custom_config.py` file to override only the default values you want.
+* override the whole `config.py` configuration file coming with the repo by modifying it
+* or with a docker mount over the file (if you chose Docker to run it)
 
 ```bash
 docker run -it -e SLACK_BOT_TOKEN=xoxb-your-own-slack-bot-token -v custom_config.py:/home/redalert/custom_config.py zwindler/redalert
@@ -99,10 +99,10 @@ For now, the only configurable part are :
 
 ### Severity levels
 
-The severity levels can be configured through the **SEVERITY_LEVELS** variable. You can modify the `custom_config.py` file like this for example:
+The severity levels can be configured through the **SEVERITY_LEVELS** variable. You can modify the `config.py` file like this for example:
 
 ```python
-class CustomConfig(object):
+class Config(object):
     # Alternative Star Trek(tm) inspired alert levels
     SEVERITY_LEVELS = [
         {
@@ -133,7 +133,7 @@ The following labels (sev1, sev2, ...) have to correspond to actual severity lev
 The values are user comma separated user lists like in this example:
 
 ```python
-class CustomConfig(object):
+class Config(object):
     INCLUDE_IN_INCIDENT = {
         "always" : "U010PPYMH33",
         "sev1" : "U0105K7EFNX,U0xxxxxxxx",

@@ -15,7 +15,7 @@ slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
 
 #  Flask web server for incoming traffic from Slack
 app = Flask(__name__)
-app.config.from_pyfile('custom_config.py')
+app.config.from_object("config.Config")
 
 #  Default route handling liveness/readiness response
 @app.route("/", methods=["GET"])
@@ -38,7 +38,9 @@ def create():
     include_in_incident = app.config["INCLUDE_IN_INCIDENT"]
 
     # Get severity nice name
-    severity_label = get_severity_pretty_name(severity)
+    for level in app.config["SEVERITY_LEVELS"]:
+        if level["value"] == severity:
+            severity_label = level["label"]
 
     # Generate a unique incident channel name
     now = datetime.now()
@@ -62,6 +64,7 @@ def create():
         user_ids += ","+include_in_incident["always"]
     if include_in_incident[severity]:
         user_ids += ","+include_in_incident[severity]
+    print(user_ids)
 
     # Add a purpose to the incident
     response = slack_client.conversations_setPurpose(
@@ -127,14 +130,6 @@ def incident_command():
             '/incident list' or '/incident close')")
         assert response["ok"]
         return make_response("", 404)
-
-
-def get_severity_pretty_name(severity):
-    for level in app.config["SEVERITY_LEVELS"]:
-        if level["value"] == severity:
-            severity_label = level["label"]
-            return severity_label
-    return "incident"
 
 
 def channel_match_pattern(channel):
