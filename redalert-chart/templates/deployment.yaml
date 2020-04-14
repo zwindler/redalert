@@ -6,7 +6,7 @@ metadata:
     app: {{ template "redalert.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
-    paging: "false"
+    pager: "false"
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
@@ -14,7 +14,7 @@ spec:
       labels:
         app: {{ template "redalert.name" . }}
         release: {{ .Release.Name }}
-        paging: "false"
+        pager: "false"
     spec:
       containers:
         - name: {{ .Chart.Name }}
