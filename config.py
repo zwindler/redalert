@@ -23,10 +23,10 @@ class Config(object):
         }
     ]
     INCLUDE_IN_INCIDENT = {
-        "always" : [],
-        "sev1" : [],
-        "sev2" : [],
-        "sev3" : [],
-        "sev4" : [],
-        "sev5" : []
+        "always": [],
+        "sev1": [],
+        "sev2": [],
+        "sev3": [],
+        "sev4": [],
+        "sev5": []
     }

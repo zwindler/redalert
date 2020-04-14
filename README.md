@@ -91,7 +91,6 @@ The very last step it to get the **Slack Bot Token** which will be required by o
 
 ![Get Bot Token for next steps](binaries/9_slack_api_redalert_bot_token.png)
 
-
 ## Backend App deployment
 
 On Ubuntu 18.04

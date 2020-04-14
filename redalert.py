@@ -53,7 +53,7 @@ def create():
     incident_manager_name = response["profile"]["real_name"]
 
     # List invited users
-    user_ids_string = get_invited_users(command_user_id, incident_manager_id, 
+    user_ids_string = get_invited_users(command_user_id, incident_manager_id,
                                         severity)
     print(user_ids_string)
 
@@ -107,12 +107,12 @@ def incident_command():
         open_incident(slack_client, command_trigger_id, command_user_id)
         return make_response("", 200)
     elif (command_type == "list"):
-        list_incident(slack_client, command_args, slack_domain, 
-                        origin_channel_name)
+        list_incident(slack_client, command_args, slack_domain,
+                      origin_channel_name)
         return make_response("", 200)
     elif (command_type == "close"):
-        close_incident(slack_client, origin_channel_name, origin_channel_id, 
-                        command_user_name, command_user_id)
+        close_incident(slack_client, origin_channel_name, origin_channel_id,
+                       command_user_name, command_user_id)
         return make_response("", 200)
     else:
         # Wrong command argument
@@ -204,8 +204,8 @@ def open_incident(slack_client, command_trigger_id, command_user_id):
     assert response["ok"]
 
 
-def list_incident(slack_client, command_args, slack_domain, 
-                origin_channel_name):
+def list_incident(slack_client, command_args, slack_domain,
+                  origin_channel_name):
     incident_dict = {}
 
     # Check if we also want to list closed incidents
@@ -259,8 +259,8 @@ def list_incident(slack_client, command_args, slack_domain,
     assert response["ok"]
 
 
-def close_incident(slack_client, origin_channel_name, origin_channel_id, 
-                    command_user_name, command_user_id):
+def close_incident(slack_client, origin_channel_name, origin_channel_id,
+                   command_user_name, command_user_id):
     current_channel = {}
     current_channel['name'] = origin_channel_name
     if not channel_match_pattern(current_channel):
