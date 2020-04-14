@@ -25,7 +25,8 @@ spec:
             value: "{{ .Values.redalert.slackBotToken }}"
           volumeMounts:
             - name: config-volume
-              mountPath: /etc/redalert
+              mountPath: /home/flask/config.py
+              subPath: config.py
               readOnly: true            
           ports:
           - containerPort: {{ .Values.service.internalPort }}
@@ -43,4 +44,3 @@ spec:
         - name: config-volume
           configMap:
             name: {{ template "redalert.fullname" . }}
-
