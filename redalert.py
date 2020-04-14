@@ -11,7 +11,6 @@ import slack
 
 #  Slack client for Web API requests
 slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
-# SLACK_VERIFICATION_TOKEN = os.environ["SLACK_VERIFICATION_TOKEN"]
 
 #  Flask web server for incoming traffic from Slack
 app = Flask(__name__)
@@ -35,12 +34,9 @@ def create():
     incident_manager_id = callback_payload["submission"]["incident_manager"]
     severity = callback_payload["submission"]["severity"]
     incident_desc = callback_payload["submission"]["incident_desc"]
-    include_in_incident = app.config["INCLUDE_IN_INCIDENT"]
 
     # Get severity nice name
-    for level in app.config["SEVERITY_LEVELS"]:
-        if level["value"] == severity:
-            severity_label = level["label"]
+    severity_label = get_severity_pretty_name(severity)
 
     # Generate a unique incident channel name
     now = datetime.now()
@@ -57,14 +53,9 @@ def create():
     incident_manager_name = response["profile"]["real_name"]
 
     # List invited users
-    user_ids = command_user_id
-    if incident_manager_id != command_user_id:
-        user_ids += ","+incident_manager_id
-    if include_in_incident["always"] != []:
-        user_ids += ","+include_in_incident["always"]
-    if include_in_incident[severity]:
-        user_ids += ","+include_in_incident[severity]
-    print(user_ids)
+    user_ids_string = get_invited_users(command_user_id, incident_manager_id, 
+                                        severity)
+    print(user_ids_string)
 
     # Add a purpose to the incident
     response = slack_client.conversations_setPurpose(
@@ -75,7 +66,7 @@ def create():
     # Invite people in it
     # TODO: check if there are less than 1000 invites (max)
     response = slack_client.conversations_invite(channel=incident_channel_id,
-                                                 users=user_ids)
+                                                 users=user_ids_string)
     assert response["ok"]
 
     # Join command origin channel if not yet in it
@@ -93,6 +84,7 @@ def create():
     assert response["ok"]
 
     return make_response("", 200)
+
 
 # backend for /incident command management
 @app.route("/incident", methods=["POST"])
@@ -130,6 +122,37 @@ def incident_command():
             '/incident list' or '/incident close')")
         assert response["ok"]
         return make_response("", 404)
+
+
+def get_severity_pretty_name(severity):
+    for level in app.config["SEVERITY_LEVELS"]:
+        if level["value"] == severity:
+            severity_label = level["label"]
+            return severity_label
+
+
+def get_invited_users(command_user_id, incident_manager_id, severity):
+    include_in_incident = app.config["INCLUDE_IN_INCIDENT"]
+    user_ids = []
+
+    # Start adding people in the list
+    user_ids.append(command_user_id)
+
+    if incident_manager_id != command_user_id:
+        user_ids.append(incident_manager_id)
+
+    if include_in_incident["always"] != []:
+        user_ids.append(include_in_incident["always"])
+
+    if include_in_incident[severity]:
+        user_ids.append(include_in_incident[severity])
+
+    # Dedupe invited users list
+    user_ids = list(dict.fromkeys(user_ids))
+    for user_id in user_ids:
+        user_ids_string += user_id+","
+
+    return user_ids_string
 
 
 def channel_match_pattern(channel):
@@ -235,6 +258,7 @@ def list_incident(slack_client, command_args, slack_domain,
     )
     assert response["ok"]
 
+
 def close_incident(slack_client, origin_channel_name, origin_channel_id, 
                     command_user_name, command_user_id):
     current_channel = {}
@@ -259,6 +283,7 @@ def close_incident(slack_client, origin_channel_name, origin_channel_id,
             channel=origin_channel_id
         )
         assert response["ok"]
+
 
 def main():
     app.run(host='0.0.0.0', port=3000)

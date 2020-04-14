@@ -128,16 +128,16 @@ Depending on the severity of the incident, you can decide to always add some ind
 
 The "always" code means that no matter the severity, this contact will always be included in the incident, in addition to the IDs added afterward in the various severities.
 
-The following labels (sev1, sev2, ...) have to correspond to actual severity levels, as configured in the `SEVERITY_LEVELS` variable.
+The following labels (sev1, sev2, ...) have to correspond to actual severity levels, as configured in the `INCLUDE_IN_INCIDENT` variable.
 
 The values are user comma separated user lists like in this example:
 
 ```python
 class Config(object):
     INCLUDE_IN_INCIDENT = {
-        "always" : "U010PPYMH33",
-        "sev1" : "U0105K7EFNX,U0xxxxxxxx",
-        "sev2" : "U0105K7EFNX",
+        "always" : ["U010PPYMH33"],
+        "sev1" : ["U0105K7EFNX", "U0xxxxxxxx"],
+        "sev2" : ["U0105K7EFNX"],
         "sev3" : [],
         "sev4" : [],
         "sev5" : []
