@@ -10,7 +10,7 @@ This project aims to provide an open source alternative.
 
 ## Features
 
-* open a channel, add a small description and invite individuals in it
+* open a channel, add a small description (optionnal) and (optionnaly) invite individuals in it
 * configurable incident severity levels
 * automatically add individuals in some or every incidents (configurable)
 * list all incident channels, optionnaly also archived ones (aka closed incidents)
