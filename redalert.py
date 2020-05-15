@@ -134,6 +134,7 @@ def get_severity_pretty_name(severity):
 def get_invited_users(command_user_id, incident_manager_id, severity):
     include_in_incident = app.config["INCLUDE_IN_INCIDENT"]
     user_ids = []
+    user_ids_string = ""
 
     # Start adding people in the list
     user_ids.append(command_user_id)
