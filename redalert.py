@@ -31,9 +31,12 @@ def create():
     origin_channel_name = callback_payload["channel"]["name"]
     origin_channel_id = callback_payload["channel"]["id"]
     incident_name = callback_payload["submission"]["incident_name"]
-    incident_manager_id = callback_payload["submission"]["incident_manager"]
     severity = callback_payload["submission"]["severity"]
-    incident_desc = callback_payload["submission"]["incident_desc"]
+
+    # defaulting incident_manager to command_user_id if incident_manager is empty
+    incident_manager_id = callback_payload["submission"].get("incident_manager", command_user_id)
+    # defaulting description as incident_name if incident_desc is empty
+    incident_desc = callback_payload["submission"].get("incident_desc", incident_name)
 
     # Get severity nice name
     severity_label = get_severity_pretty_name(severity)
@@ -60,7 +63,9 @@ def create():
     # Add a purpose to the incident
     response = slack_client.conversations_setPurpose(
                    channel=incident_channel_id,
-                   purpose=incident_desc)
+                   purpose=incident_desc + "| Managed by "
+                   + "<https://app.slack.com/team/" + incident_manager_id
+                   + "|" + incident_manager_name + ">")
     assert response["ok"]
 
     # Invite people in it
