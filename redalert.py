@@ -41,7 +41,7 @@ def create():
     # Generate a unique incident channel name
     now = datetime.now()
     date_time = now.strftime("%Y%m%d-%H%M")
-    incident_channel_name = severity+"-"+incident_name+"-"+date_time
+    incident_channel_name = severity+"-"+date_time+"-"+incident_name
 
     # Create channel
     response = slack_client.conversations_create(name=incident_channel_name)
