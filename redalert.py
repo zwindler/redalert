@@ -190,12 +190,14 @@ def open_incident(slack_client, command_trigger_id, command_user_id):
                         "label": "Incident manager",
                         "name": "incident_manager",
                         "type": "select",
+                        "optional": "true",                        
                         "data_source": "users"
                     },
                     {
                         "label": "Brief description of the incident",
                         "name": "incident_desc",
                         "type": "textarea",
+                        "optional": "true",
                         "hint": "A brief description of the incident."
                     }
                 ]
