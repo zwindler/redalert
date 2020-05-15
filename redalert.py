@@ -245,7 +245,7 @@ def list_incident(slack_client, command_args, slack_domain,
     if exclude_archived == "false":
         incident_list_string = 'Listing ALL incidents (including closed):\n'
     else:
-        incident_list_string = 'Listing incidents:\n'
+        incident_list_string = 'Listing open incidents:\n'
     # Generate a user friendly list
     for current_channel_id, current_channel_name in incident_dict.items():
         incident_list_string += "- <https://" + slack_domain \
