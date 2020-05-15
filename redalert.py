@@ -34,9 +34,9 @@ def create():
     severity = callback_payload["submission"]["severity"]
 
     # defaulting incident_manager to command_user_id if incident_manager is empty
-    incident_manager_id = callback_payload["submission"].get("incident_manager", command_user_id)
+    incident_manager_id = callback_payload["submission"].get("incident_manager") or command_user_id
     # defaulting description as incident_name if incident_desc is empty
-    incident_desc = callback_payload["submission"].get("incident_desc", incident_name)
+    incident_desc = callback_payload["submission"].get("incident_desc") or incident_name
 
     # Get severity nice name
     severity_label = get_severity_pretty_name(severity)
