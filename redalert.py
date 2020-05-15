@@ -118,8 +118,8 @@ def incident_command():
         # Wrong command argument
         response = slack_client.chat_postMessage(
             channel="# "+origin_channel_name,
-            text="Wrong command, only type '/incident open', \
-            '/incident list' or '/incident close')")
+            text="Wrong command, only type '/incident open', " +
+            "'/incident list' or '/incident close'")
         assert response["ok"]
         return make_response("", 404)
 
