@@ -11,6 +11,7 @@ import slack
 
 #  Slack client for Web API requests
 slack_client = slack.WebClient(token=os.environ['SLACK_BOT_TOKEN'])
+display_date_and_time = False
 
 #  Flask web server for incoming traffic from Slack
 app = Flask(__name__)
@@ -43,7 +44,10 @@ def create():
 
     # Generate a unique incident channel name
     now = datetime.now()
-    date_time = now.strftime("%Y%m%d-%H%M")
+    if display_date_and_time:
+        date_time = now.strftime("%Y%m%d-%H%M")
+    else:
+        date_time = now.strftime("%Y%m%d")
     incident_channel_name = severity+"-"+date_time+"-"+incident_name
 
     # Create channel
@@ -148,10 +152,12 @@ def get_invited_users(command_user_id, incident_manager_id, severity):
         user_ids.append(incident_manager_id)
 
     if include_in_incident["always"] != []:
-        user_ids.append(include_in_incident["always"])
+        for current_id in include_in_incident["always"]:
+            user_ids.append(current_id)
 
     if include_in_incident[severity]:
-        user_ids.append(include_in_incident[severity])
+        for current_id in include_in_incident[severity]:
+            user_ids.append(current_id)
 
     # Dedupe invited users list
     user_ids = list(dict.fromkeys(user_ids))
