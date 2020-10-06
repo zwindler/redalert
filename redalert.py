@@ -67,7 +67,7 @@ def create():
     # Add a purpose to the incident
     response = slack_client.conversations_setPurpose(
                    channel=incident_channel_id,
-                   purpose=incident_desc + "| Managed by "
+                   purpose=incident_desc + ", managed by "
                    + "<https://app.slack.com/team/" + incident_manager_id
                    + "|" + incident_manager_name + ">")
     assert response["ok"]
